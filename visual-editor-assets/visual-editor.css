@@ -1,0 +1,1325 @@
+/* ==========================================================================
+   Visual Editor — chrome only.
+   Every rule here is scoped under [data-ve-active] on <html>, so the file is
+   inert unless the editor boots. Nothing in here touches site layout.
+
+   Visual language: swiss editorial. Paper ground, hairline rules, mono
+   micro-labels, flat accents, square-ish corners, hard shadows. Deliberately
+   NOT a dark glassy inspector — the chrome should read like print furniture
+   sitting on the page, not like a floating IDE.
+   ========================================================================== */
+
+:root {
+  /* paper + ink */
+  --ve-bg: #f5f4f1;
+  --ve-bg-raised: #ffffff;
+  --ve-bg-input: #ffffff;
+  --ve-bg-sunken: #eceae5;
+  --ve-line: #dddbd5;
+  --ve-line-soft: #e9e7e2;
+  --ve-text: #0b0b0b;
+  --ve-text-dim: #6c6c6c;
+  --ve-text-faint: #9a9a9a;
+
+  /* the three hard accents, shared with the page's own palette */
+  --ve-accent: #1b4dff;
+  --ve-accent-soft: rgba(27, 77, 255, 0.1);
+  --ve-red: #ff3b14;
+  --ve-lime: #ddf14a;
+
+  --ve-warn: #b45309;
+  --ve-ok: #15803d;
+
+  --ve-sans: "Helvetica Neue", Helvetica, Inter, "Segoe UI", system-ui,
+             -apple-system, sans-serif;
+  --ve-mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+
+  /* one hard shadow, reused — no soft glows anywhere */
+  --ve-lift: 3px 3px 0 rgba(11, 11, 11, 0.14);
+  --ve-lift-lg: 6px 6px 0 rgba(11, 11, 11, 0.16);
+}
+
+/* ----- hover + selection affordances ----- */
+
+[data-ve-active] [data-ve-hover] {
+  outline: 1px dashed var(--ve-accent) !important;
+  outline-offset: 1px;
+  cursor: pointer;
+}
+
+[data-ve-active] [data-ve-selected] {
+  outline: 2px solid var(--ve-accent) !important;
+  outline-offset: 1px;
+}
+
+/* Browse mode hands the page back to the user: no hover chrome, no capture. */
+[data-ve-browsing] [data-ve-hover],
+[data-ve-browsing] [data-ve-selected] {
+  outline: none !important;
+}
+
+[data-ve-browsing] .ve-handles { display: none; }
+
+/* Resize handles live in an overlay so they never affect the target's box. */
+.ve-handles {
+  position: fixed;
+  z-index: 2147483000;
+  pointer-events: none;
+}
+
+/* Grab surface for moving the element. Sits under the handles so corner
+   dragging still resizes. */
+.ve-move-surface {
+  position: absolute;
+  inset: 0;
+  cursor: move;
+  pointer-events: auto;
+}
+
+.ve-move-surface.is-off {
+  cursor: default;
+  pointer-events: none;
+}
+
+[data-ve-moving] * { cursor: move !important; }
+
+[data-ve-moving] {
+  user-select: none;
+}
+
+/* Square handles, not dots — they read as a bounding box rather than a toy. */
+.ve-handle {
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  margin: -5px 0 0 -5px;
+  border: 1.5px solid var(--ve-text);
+  border-radius: 0;
+  background: var(--ve-bg-raised);
+  pointer-events: auto;
+}
+
+.ve-handle:hover { background: var(--ve-lime); }
+
+.ve-handle[data-dir="se"] { cursor: nwse-resize; }
+.ve-handle[data-dir="sw"] { cursor: nesw-resize; }
+.ve-handle[data-dir="ne"] { cursor: nesw-resize; }
+.ve-handle[data-dir="nw"] { cursor: nwse-resize; }
+.ve-handle[data-dir="e"],
+.ve-handle[data-dir="w"] { cursor: ew-resize; }
+.ve-handle[data-dir="n"],
+.ve-handle[data-dir="s"] { cursor: ns-resize; }
+
+.ve-size-badge {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translate(-50%, 8px);
+  padding: 3px 7px;
+  border-radius: 0;
+  background: var(--ve-text);
+  color: var(--ve-bg);
+  font: 500 10px/1.4 var(--ve-mono);
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* ----- delete button on the selection -----
+   Sits ABOVE the selection, left-aligned with its edge. Overlapping the corner
+   would bury the nw resize handle and make the element impossible to scale. */
+
+.ve-del-btn {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  display: grid;
+  width: 22px;
+  height: 22px;
+  margin-bottom: 8px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: var(--ve-red);
+  color: #fff;
+  box-shadow: var(--ve-lift);
+  cursor: pointer;
+  pointer-events: auto;
+  place-items: center;
+}
+
+.ve-del-btn:hover { background: var(--ve-text); }
+
+/* The icon is an inline SVG (see removeButton()) so its strokes stay crisp and
+   perfectly centred, which pseudo-element rectangles never quite manage. */
+.ve-del-btn svg {
+  display: block;
+  width: 12px;
+  height: 12px;
+}
+
+/* ----- uploaded elements -----
+   A modest starting size so a freshly added asset is visible and grabbable
+   rather than dominating its container. Any resize the user makes carries
+   !important and wins over this. */
+.ve-upload {
+  display: block;
+  width: 180px;
+  max-width: 40%;
+  height: auto;
+  margin: 12px 0;
+}
+
+/* Inline SVG has no intrinsic size to fall back on, so give it a box. */
+svg.ve-upload {
+  height: auto;
+  aspect-ratio: 1 / 1;
+}
+
+/* ----- the editor mark -----
+   Doubles as the toolbar's collapse toggle and its drag handle, and heads the
+   inspector. One glyph, three jobs. */
+
+.ve-logo {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Deliberately NOT position:relative. The unsaved-count badge lives inside this
+   button but must be pinned to the TOOLBAR's top-right corner, not the logo's —
+   the bar is position:fixed and therefore the containing block, so leaving the
+   logo static makes the badge sit in one absolute spot whether the bar is open
+   or shut. Making this relative is what caused the badge to jump on collapse. */
+.ve-logo-btn {
+  display: grid;
+  width: 26px;
+  height: 26px;
+  flex: none;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  cursor: grab;
+  place-items: center;
+  touch-action: none;
+}
+
+/* The mark keeps the SAME rest size in both drawer states — the shell already
+   communicates open vs shut by collapsing, so the mark itself stays put. Two
+   things change instead:
+   - Hover grows the mark a little, in BOTH states: a plain affordance that
+     this is the thing you can click, not a preview of the result.
+   - The collapsed mark turns red (the disc recolours via .ve-logo-disc), so
+     the shut drawer reads as a distinct "standby" state at a glance.
+
+   Hard constraint: the transform goes on .ve-logo (the svg), NEVER on
+   .ve-logo-btn. The unsaved-count badge is a DOM child of the button but is
+   positioned against .ve-bar — a transform on the button would make it the
+   badge's containing block and the badge would jump. The svg is a sibling of
+   the badge, so scaling it moves nothing else. */
+.ve-logo {
+  transition: transform 0.15s ease;
+  transform-origin: center;
+}
+
+.ve-logo-btn:hover .ve-logo { transform: scale(1.15); }
+
+.ve-logo-btn.is-dragging .ve-logo { transition: none; transform: none; }
+
+.ve-logo-btn.is-dragging { cursor: grabbing; }
+
+/* Recolour on collapse. transition on fill keeps the swap as smooth as the
+   size easing. */
+.ve-logo-disc { transition: fill 0.15s ease; }
+.ve-bar.is-collapsed .ve-logo-disc { fill: var(--ve-red); }
+
+.ve-panel-logo {
+  display: grid;
+  width: 18px;
+  height: 18px;
+  flex: none;
+  place-items: center;
+}
+
+/* ----- floating panel ----- */
+
+.ve-panel {
+  position: fixed;
+  z-index: 2147483100;
+  /* Sits clear of the master toolbar, which owns the top-right corner. Since
+     the inspector is a right-hand rail that can only be dragged vertically, its
+     right edge must line up exactly with the toolbar's — hence the same 16px
+     inset. Keep these two values in sync. */
+  top: 64px;
+  right: 16px;
+  display: flex;
+  width: 306px;
+  max-height: calc(100vh - 96px);
+  flex-direction: column;
+  border: 1px solid var(--ve-text);
+  border-radius: 0;
+  background: var(--ve-bg-raised);
+  box-shadow: var(--ve-lift-lg);
+  color: var(--ve-text);
+  font: 12px/1.5 var(--ve-sans);
+  /* The panel is chrome: never let site styles bleed in. */
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.ve-panel[hidden] { display: none; }
+
+.ve-panel-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 10px;
+  border-bottom: 1px solid var(--ve-text);
+  background: var(--ve-bg);
+  cursor: grab;
+  user-select: none;
+}
+
+.ve-panel-head.is-dragging { cursor: grabbing; }
+
+.ve-panel-title {
+  flex: 1;
+  overflow: hidden;
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: -0.01em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ve-tag {
+  padding: 2px 6px;
+  border-radius: 0;
+  background: var(--ve-accent);
+  color: #fff;
+  font: 500 9px/1.4 var(--ve-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.ve-icon-btn {
+  display: grid;
+  width: 20px;
+  height: 20px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--ve-text-dim);
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  place-items: center;
+}
+
+.ve-icon-btn:hover {
+  background: var(--ve-text);
+  color: var(--ve-bg);
+}
+
+.ve-panel-body {
+  overflow-y: auto;
+  padding: 0 0 8px;
+  flex: 1;
+}
+
+.ve-empty {
+  padding: 22px 16px;
+  color: var(--ve-text-dim);
+  text-align: center;
+  line-height: 1.7;
+}
+
+.ve-empty kbd {
+  padding: 1px 5px;
+  border: 1px solid var(--ve-line);
+  border-radius: 0;
+  background: var(--ve-bg);
+  font-family: var(--ve-mono);
+  font-size: 10px;
+}
+
+/* selector breadcrumb / parent hopping */
+.ve-selector {
+  padding: 7px 10px;
+  border-bottom: 1px solid var(--ve-line);
+  background: var(--ve-bg-sunken);
+  color: var(--ve-text-dim);
+  font: 10px/1.5 var(--ve-mono);
+  letter-spacing: 0.02em;
+  word-break: break-all;
+}
+
+/* Three equal columns, one row, never wrapping. The hops are peers — there is
+   no priority between "go out", "go in" and "go along" — so they get identical
+   footprints, and an unavailable one greys out in place rather than vanishing
+   and reflowing the rest. */
+.ve-hop {
+  display: grid;
+  gap: 4px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--ve-line);
+}
+
+/* Hierarchy navigation: permanently inverted (paper on ink) rather than the
+   faint raised-chip look — these are the panel's primary wayfinding controls
+   and need to read at a glance. Disabled (e.g. no parent) falls back to the
+   quiet outline style so the available hops stand out. */
+.ve-hop-btn {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 3px;
+  border: 1px solid var(--ve-text);
+  border-radius: 0;
+  background: var(--ve-text);
+  color: var(--ve-bg);
+  cursor: pointer;
+  gap: 4px;
+}
+
+.ve-hop-icon {
+  display: block;
+  width: 13px;
+  height: 13px;
+  flex: none;
+}
+
+.ve-hop-label {
+  font: 500 9px/1 var(--ve-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* The index rides INSIDE its own button: it qualifies that specific hop, so as
+   loose text beside the row it read as unrelated to anything. */
+.ve-hop-n {
+  flex: none;
+  opacity: 0.6;
+  font: 500 9px/1 var(--ve-mono);
+  letter-spacing: 0.02em;
+}
+
+.ve-hop-btn:hover:not(:disabled) {
+  border-color: var(--ve-red);
+  background: var(--ve-red);
+  color: #fff;
+}
+
+.ve-hop-btn:disabled {
+  border-color: var(--ve-line);
+  background: var(--ve-bg);
+  color: var(--ve-text-faint);
+  opacity: 1;
+  cursor: default;
+}
+
+/* ----- master toolbar (top-right): history + saving ----- */
+
+.ve-bar {
+  position: fixed;
+  z-index: 2147483150;
+  top: 16px;
+  right: 16px;
+  display: flex;
+  align-items: center;
+  /* Fixed height so collapsing cannot shift the logo vertically — it is the
+     anchor the user aims at, and the bar is pinned by its right edge for the
+     same reason. */
+  height: 42px;
+  box-sizing: border-box;
+  gap: 4px;
+  padding: 6px 8px;
+  border: 1px solid var(--ve-text);
+  border-radius: 0;
+  background: var(--ve-bg-raised);
+  box-shadow: var(--ve-lift);
+  color: var(--ve-text);
+  font: 11px/1.4 var(--ve-sans);
+  /* Dragging sets inline left/top; nothing here should animate that. */
+  user-select: none;
+}
+
+/* One fixed height for EVERY control in the bar. Text buttons are sized by font
+   metrics (10px × 1.3 = 13px) while icon buttons are sized by their 15px glyph,
+   so left to themselves they came out 25px and 27px tall — flex centring made
+   their midlines agree but their borders visibly disagreed, which reads as
+   "History sits a pixel high". Fixing the height makes the whole row share one
+   top and bottom edge. */
+.ve-bar-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 28px;
+  box-sizing: border-box;
+  padding: 0 9px;
+  border: 1px solid var(--ve-line);
+  border-radius: 0;
+  background: var(--ve-bg);
+  color: var(--ve-text);
+  font: 500 10px/1 var(--ve-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.ve-bar-btn:hover:not(:disabled) {
+  border-color: var(--ve-text);
+  background: var(--ve-text);
+  color: var(--ve-bg);
+}
+
+.ve-bar-btn:disabled { opacity: 0.3; cursor: default; }
+
+/* Icon-only buttons get a square footprint so they read as a set. */
+.ve-bar-btn.ve-icon-only {
+  width: 28px;
+  padding: 0;
+}
+
+.ve-bar-btn.ve-icon-only svg {
+  display: block;
+  width: 15px;
+  height: 15px;
+}
+
+.ve-bar-btn.is-primary {
+  border-color: var(--ve-text);
+  background: var(--ve-text);
+  color: var(--ve-bg);
+}
+
+.ve-bar-btn.is-primary:hover:not(:disabled) {
+  background: var(--ve-accent);
+  border-color: var(--ve-accent);
+  color: #fff;
+}
+
+.ve-bar-btn.is-quiet {
+  border-color: transparent;
+  background: transparent;
+  color: var(--ve-text-dim);
+}
+
+.ve-bar-btn.is-quiet:hover {
+  background: var(--ve-bg-sunken);
+  border-color: var(--ve-line);
+  color: var(--ve-text);
+}
+
+.ve-bar-sep {
+  width: 1px;
+  height: 20px;
+  flex: none;
+  margin: 0 3px;
+  background: var(--ve-line);
+}
+
+/* ----- close (×) on the inspector -----
+   The inspector is dismissed outright rather than hidden, so a cross reads
+   correctly here. */
+
+.ve-close-btn svg {
+  display: block;
+  width: 11px;
+  height: 11px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+}
+
+.ve-close-btn:hover {
+  background: var(--ve-red);
+  color: #fff;
+}
+
+/* ----- save button carries its own state ----- */
+
+/* The count badge overhangs the Save button's top-right corner, which lands on
+   top of "Save as" — the next sibling. Both wrappers were position:relative with
+   z-index:auto, so DOM order won and the later sibling covered the badge.
+   Raising the whole wrapper (not just the badge) keeps the badge above every
+   later sibling regardless of how the bar is reordered. */
+.ve-save-wrap {
+  position: relative;
+  z-index: 3;
+}
+
+.ve-save-btn { gap: 6px; }
+
+.ve-save-dot {
+  width: 6px;
+  height: 6px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--ve-lime);
+}
+
+.ve-save-btn.is-clean {
+  border-color: var(--ve-line);
+  background: var(--ve-bg);
+  color: var(--ve-text-dim);
+}
+
+.ve-save-btn.is-clean .ve-save-dot {
+  background: var(--ve-ok);
+}
+
+.ve-save-btn:disabled { opacity: 1; }
+
+/* Sits fully OUTSIDE the button's top-right corner (translate pushes it clear)
+   rather than straddling the edge, so the count is never read against the dark
+   Save fill and never disappears under the next sibling. */
+.ve-save-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 1;
+  min-width: 15px;
+  padding: 0 3px;
+  border: 1px solid var(--ve-bg-raised);
+  border-radius: 0;
+  background: var(--ve-red);
+  color: #fff;
+  font: 600 9px/14px var(--ve-mono);
+  text-align: center;
+  pointer-events: none;
+  transform: translate(45%, -45%);
+}
+
+.ve-save-badge[hidden] { display: none; }
+
+/* ----- scope warning ----- */
+
+.ve-scope {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--ve-line);
+}
+
+.ve-scope.is-shared {
+  border-left: 3px solid var(--ve-red);
+  background: rgba(255, 59, 20, 0.07);
+}
+
+.ve-scope.is-single {
+  border-left: 3px solid var(--ve-ok);
+  background: rgba(21, 128, 61, 0.06);
+}
+
+.ve-scope-msg {
+  flex: 1;
+  color: var(--ve-text-dim);
+  font-size: 10.5px;
+  line-height: 1.5;
+}
+
+.ve-scope-msg strong {
+  font-weight: 700;
+  color: var(--ve-text);
+}
+
+.ve-scope.is-shared .ve-scope-msg strong { color: var(--ve-red); }
+.ve-scope.is-single .ve-scope-msg strong { color: var(--ve-ok); }
+
+.ve-scope-choice {
+  display: flex;
+  flex: none;
+  border: 1px solid var(--ve-line);
+}
+
+.ve-scope-choice button {
+  padding: 4px 7px;
+  border: 0;
+  border-right: 1px solid var(--ve-line);
+  background: var(--ve-bg-raised);
+  color: var(--ve-text-dim);
+  font: 500 9px/1.3 var(--ve-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.ve-scope-choice button:last-child { border-right: 0; }
+
+.ve-scope-choice button.is-on {
+  background: var(--ve-text);
+  color: var(--ve-bg);
+}
+
+[data-ve-active] [data-ve-scope-peek] {
+  outline: 2px dashed var(--ve-red) !important;
+  outline-offset: 2px;
+}
+
+/* ----- minimised state -----
+   Collapsing shuts ONLY the toolbar, like a drawer, down to just the logo.
+   The inspector, the handles, the selection outlines and page interaction are
+   deliberately unaffected — the drawer and the editor are independent things,
+   and shutting one must never touch the other. */
+
+.ve-bar.is-collapsed [data-ve-collapsible] { display: none; }
+
+/* Padding is deliberately NOT changed here. The bar is right-anchored, so
+   shrinking padding-right would slide the logo sideways by exactly that amount
+   — and the logo is the fixed point the user aims at. Only the gap collapses. */
+.ve-bar.is-collapsed {
+  gap: 0;
+}
+
+.ve-bar.is-collapsed.is-dirty {
+  border-color: var(--ve-red);
+  opacity: 1;
+}
+
+/* Anchored to the BAR (the nearest positioned ancestor, since .ve-logo-btn is
+   deliberately static), so it holds one fixed offset from the bar's top-right
+   corner in both the open and collapsed states, and never reacts to hover. */
+.ve-bar-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 4;
+  min-width: 15px;
+  padding: 0 3px;
+  border: 1px solid var(--ve-bg-raised);
+  border-radius: 0;
+  background: var(--ve-red);
+  color: #fff;
+  font: 600 9px/14px var(--ve-mono);
+  text-align: center;
+  pointer-events: none;
+  transform: translate(45%, -45%);
+}
+
+.ve-bar-badge[hidden] { display: none; }
+
+/* ----- live text editing ----- */
+
+[data-ve-active] [data-ve-editing] {
+  outline: 2px solid var(--ve-ok) !important;
+  outline-offset: 2px;
+  cursor: text;
+}
+
+/* ----- mode toggle -----
+   Icon shows the ACTION, not the state: in edit mode you see the cursor
+   (click to browse); in browse mode you see the pen (click to edit). */
+
+.ve-mode-btn {
+  width: 28px;
+  padding: 0;
+}
+
+.ve-mode-btn svg {
+  display: block;
+  width: 15px;
+  height: 15px;
+}
+
+.ve-mode-btn .ve-mode-pen { display: none; }
+.ve-mode-btn.is-off .ve-mode-cursor { display: none; }
+.ve-mode-btn.is-off .ve-mode-pen { display: block; }
+
+.ve-mode-btn .ve-mode-cursor { color: var(--ve-accent); }
+.ve-mode-btn.is-off .ve-mode-pen { color: var(--ve-text-dim); }
+
+.ve-mode-btn:hover .ve-mode-cursor,
+.ve-mode-btn:hover .ve-mode-pen { color: inherit; }
+
+.ve-bar-btn.is-on {
+  border-color: var(--ve-text);
+  background: var(--ve-text);
+  color: var(--ve-bg);
+}
+
+/* ----- save-as menu ----- */
+
+.ve-menu-wrap { position: relative; }
+
+.ve-menu {
+  position: absolute;
+  top: calc(100% + 7px);
+  right: 0;
+  z-index: 2147483160;
+  width: 232px;
+  padding: 4px;
+  border: 1px solid var(--ve-text);
+  border-radius: 0;
+  background: var(--ve-bg-raised);
+  box-shadow: var(--ve-lift);
+}
+
+.ve-menu[hidden] { display: none; }
+
+.ve-menu button {
+  display: block;
+  width: 100%;
+  padding: 7px 9px;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  color: var(--ve-text);
+  text-align: left;
+  cursor: pointer;
+}
+
+.ve-menu button:hover { background: var(--ve-bg-sunken); }
+
+.ve-menu button strong {
+  display: block;
+  font-weight: 600;
+  font-size: 11.5px;
+}
+
+.ve-menu button span {
+  display: block;
+  margin-top: 2px;
+  color: var(--ve-text-dim);
+  font-size: 10.5px;
+}
+
+/* ----- history panel ----- */
+
+.ve-history {
+  position: fixed;
+  z-index: 2147483140;
+  top: 66px;
+  right: 20px;
+  display: flex;
+  width: 320px;
+  max-height: min(60vh, 460px);
+  flex-direction: column;
+  border: 1px solid var(--ve-text);
+  border-radius: 0;
+  background: var(--ve-bg-raised);
+  box-shadow: var(--ve-lift-lg);
+  color: var(--ve-text);
+  font: 12px/1.5 var(--ve-sans);
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.ve-history,
+.ve-history * { cursor: default; }
+.ve-history button,
+.ve-history .ve-history-main,
+.ve-history .ve-history-act,
+.ve-history [data-ve-history-close],
+.ve-history .ve-btn { cursor: pointer; }
+
+.ve-history-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 10px;
+  border-bottom: 1px solid var(--ve-text);
+  background: var(--ve-bg);
+}
+
+.ve-history-head strong { flex: 1; font-size: 12px; }
+
+.ve-history-count {
+  color: var(--ve-text-faint);
+  font: 500 10px/1.4 var(--ve-mono);
+  letter-spacing: 0.1em;
+}
+
+.ve-history-list {
+  overflow-y: auto;
+  flex: 1;
+}
+
+.ve-history-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 10px;
+  border-bottom: 1px solid var(--ve-line-soft);
+}
+
+.ve-history-row:hover { background: var(--ve-bg-sunken); }
+
+.ve-history-row.is-muted .ve-history-main,
+.ve-history-row.is-undone .ve-history-main { opacity: 0.4; }
+
+.ve-history-row.is-undone .ve-history-title { text-decoration: line-through; }
+
+.ve-history-main {
+  overflow: hidden;
+  flex: 1;
+  border: 0;
+  background: none;
+  color: inherit;
+  text-align: left;
+}
+
+.ve-history-title {
+  overflow: hidden;
+  font-size: 11.5px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ve-history-meta {
+  overflow: hidden;
+  color: var(--ve-text-faint);
+  font: 10px/1.5 var(--ve-mono);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ve-history-scope {
+  flex: none;
+  color: var(--ve-text-faint);
+  font: 500 9px/1.4 var(--ve-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.ve-history-act {
+  display: grid;
+  width: 20px;
+  height: 20px;
+  flex: none;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  color: var(--ve-text-faint);
+  font-size: 11px;
+  line-height: 1;
+  place-items: center;
+}
+
+.ve-history-act:hover {
+  background: var(--ve-text);
+  color: var(--ve-bg);
+}
+
+.ve-history-act.is-del:hover { background: var(--ve-red); color: #fff; }
+
+.ve-history-foot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-top: 1px solid var(--ve-line);
+  background: var(--ve-bg);
+}
+
+.ve-history-hint {
+  flex: 1;
+  color: var(--ve-text-faint);
+  font: 9.5px/1.5 var(--ve-mono);
+  letter-spacing: 0.04em;
+}
+
+/* ----- collapsible groups ----- */
+
+.ve-group {
+  border-top: 1px solid var(--ve-line);
+}
+
+.ve-group:first-child { border-top: 0; }
+
+.ve-group-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.ve-group-head:hover { background: var(--ve-bg-sunken); }
+
+/* Caret is an SVG triangle, so it needs a real box rather than font metrics. */
+.ve-caret {
+  display: grid;
+  width: 12px;
+  height: 12px;
+  flex: none;
+  color: var(--ve-text-dim);
+  place-items: center;
+}
+
+.ve-caret svg {
+  display: block;
+  width: 12px;
+  height: 12px;
+}
+
+.ve-group-title {
+  flex: 1;
+  color: var(--ve-text-dim);
+  font-family: var(--ve-mono);
+  font-weight: 500;
+  font-size: 9.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+/* Folded groups offer + to seed defaults; populated ones offer × to strip.
+   Fixed square box with padding:0 — a 17px button carrying 6px of horizontal
+   padding leaves a 3px content box, which is what made the glyphs sit ragged. */
+.ve-group-action {
+  display: grid;
+  width: 18px;
+  height: 18px;
+  flex: none;
+  padding: 0;
+  border: 1px solid var(--ve-line);
+  border-radius: 0;
+  background: var(--ve-bg-raised);
+  color: var(--ve-text-dim);
+  cursor: pointer;
+  place-items: center;
+}
+
+.ve-group-action svg {
+  display: block;
+  width: 11px;
+  height: 11px;
+}
+
+.ve-group-action:hover {
+  border-color: var(--ve-accent);
+  background: var(--ve-accent);
+  color: #fff;
+}
+
+.ve-group-action.is-remove:hover {
+  border-color: var(--ve-red);
+  background: var(--ve-red);
+  color: #fff;
+}
+
+.ve-group-body { padding: 0 10px 11px; }
+
+.ve-group.is-folded .ve-group-body { display: none; }
+
+.ve-group.is-folded .ve-group-head { opacity: 0.72; }
+
+/* minmax(0, 1fr), not plain 1fr: a bare `1fr` floors at the track's min-content
+   width, so a colour swatch + text field would push the row wider than the
+   panel and spill past its right border instead of shrinking. */
+.ve-row {
+  display: grid;
+  align-items: center;
+  margin-bottom: 6px;
+  gap: 8px;
+  grid-template-columns: 74px minmax(0, 1fr);
+}
+
+.ve-row:last-child { margin-bottom: 0; }
+
+.ve-row > label {
+  overflow: hidden;
+  color: var(--ve-text-dim);
+  font-size: 10.5px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ve-field {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: 5px;
+}
+
+.ve-field input[type="number"],
+.ve-field input[type="text"] {
+  width: 100%;
+  min-width: 0;
+  padding: 4px 6px;
+  border: 1px solid var(--ve-line);
+  border-radius: 0;
+  background: var(--ve-bg-input);
+  color: var(--ve-text);
+  font: 11px/1.4 var(--ve-mono);
+}
+
+.ve-field input:focus {
+  border-color: var(--ve-accent);
+  outline: none;
+}
+
+/* Unit selector — the crux of keeping this design responsive. */
+.ve-unit {
+  padding: 4px 3px;
+  border: 1px solid var(--ve-line);
+  border-radius: 0;
+  background: var(--ve-bg);
+  color: var(--ve-text-dim);
+  font: 9.5px/1.4 var(--ve-mono);
+  cursor: pointer;
+}
+
+.ve-unit:focus { border-color: var(--ve-accent); outline: none; }
+
+.ve-field input[type="color"] {
+  width: 34px;
+  min-width: 34px;
+  height: 24px;
+  flex: none;
+  padding: 0;
+  border: 1px solid var(--ve-line);
+  border-radius: 0;
+  background: none;
+  cursor: pointer;
+}
+
+/* Safari/Chrome shrink the swatch unless the inner wrapper is reset. */
+.ve-field input[type="color"]::-webkit-color-swatch-wrapper {
+  padding: 2px;
+}
+
+.ve-field input[type="color"]::-webkit-color-swatch {
+  border: 0;
+  border-radius: 0;
+}
+
+.ve-field input[type="range"] {
+  width: 100%;
+  min-width: 0;
+  accent-color: var(--ve-accent);
+}
+
+/* These two must out-specify `.ve-field input[type="text"] { width: 100% }`
+   above — a lone class loses to class+attribute, so the narrow fields were
+   being stretched to fill the row and spilled past the panel's right edge. */
+.ve-field input.ve-num-mini {
+  width: 46px;
+  min-width: 46px;
+  flex: 0 0 46px;
+}
+
+.ve-field input.ve-swatch-alpha {
+  width: 42px;
+  min-width: 42px;
+  flex: 0 0 42px;
+}
+
+/* ----- footer actions ----- */
+
+.ve-panel-foot {
+  display: grid;
+  gap: 6px;
+  padding: 9px 10px;
+  border-top: 1px solid var(--ve-text);
+  background: var(--ve-bg);
+  grid-template-columns: 1fr 1fr;
+}
+
+.ve-btn {
+  padding: 6px 8px;
+  border: 1px solid var(--ve-line);
+  border-radius: 0;
+  background: var(--ve-bg-raised);
+  color: var(--ve-text);
+  font: 500 10px/1.3 var(--ve-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.ve-btn:hover {
+  border-color: var(--ve-text);
+  background: var(--ve-text);
+  color: var(--ve-bg);
+}
+
+.ve-btn-primary {
+  border-color: var(--ve-text);
+  background: var(--ve-text);
+  color: var(--ve-bg);
+}
+
+.ve-btn-primary:hover {
+  background: var(--ve-accent);
+  border-color: var(--ve-accent);
+  color: #fff;
+}
+
+.ve-btn-wide { grid-column: 1 / -1; }
+
+/* The four semantic buttons keep their identities — blue = step back,
+   red = destructive, green = replace image, gold = ungroup — but flat. */
+.ve-btn-blue {
+  border-color: var(--ve-accent);
+  background: var(--ve-accent);
+  color: #fff;
+}
+
+.ve-btn-blue:hover {
+  background: var(--ve-text);
+  border-color: var(--ve-text);
+  color: var(--ve-bg);
+}
+
+.ve-btn-red {
+  border-color: var(--ve-red);
+  background: var(--ve-red);
+  color: #fff;
+}
+
+.ve-btn-red:hover {
+  background: var(--ve-text);
+  border-color: var(--ve-text);
+  color: var(--ve-bg);
+}
+
+.ve-btn-green {
+  border-color: #15803d;
+  background: #15803d;
+  color: #fff;
+}
+
+.ve-btn-green:hover {
+  background: var(--ve-text);
+  border-color: var(--ve-text);
+  color: var(--ve-bg);
+}
+
+.ve-btn-gold {
+  border-color: var(--ve-text);
+  background: var(--ve-lime);
+  color: var(--ve-text);
+}
+
+.ve-btn-gold:hover {
+  background: var(--ve-text);
+  color: var(--ve-lime);
+}
+
+/* ----- export dialog ----- */
+
+.ve-modal {
+  position: fixed;
+  z-index: 2147483200;
+  inset: 0;
+  display: grid;
+  padding: 40px 20px;
+  background: rgba(11, 11, 11, 0.42);
+  place-items: center;
+}
+
+.ve-modal[hidden] { display: none; }
+
+.ve-modal-box {
+  display: flex;
+  width: min(860px, 100%);
+  max-height: 100%;
+  flex-direction: column;
+  border: 1px solid var(--ve-text);
+  border-radius: 0;
+  background: var(--ve-bg-raised);
+  box-shadow: var(--ve-lift-lg);
+  color: var(--ve-text);
+  font: 12px/1.5 var(--ve-sans);
+}
+
+.ve-modal-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 13px;
+  border-bottom: 1px solid var(--ve-text);
+  background: var(--ve-bg);
+}
+
+.ve-modal-head h3 {
+  flex: 1;
+  margin: 0;
+  color: var(--ve-text);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  text-transform: none;
+}
+
+.ve-modal textarea {
+  width: 100%;
+  flex: 1;
+  min-height: 320px;
+  padding: 12px 14px;
+  border: 0;
+  background: var(--ve-bg-sunken);
+  color: var(--ve-text);
+  font: 11px/1.65 var(--ve-mono);
+  resize: none;
+  white-space: pre;
+}
+
+.ve-modal textarea:focus { outline: none; }
+
+.ve-modal-foot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 13px;
+  border-top: 1px solid var(--ve-text);
+  background: var(--ve-bg);
+}
+
+.ve-modal-hint {
+  flex: 1;
+  color: var(--ve-text-dim);
+  font: 10px/1.5 var(--ve-mono);
+  letter-spacing: 0.04em;
+}
+
+.ve-toast {
+  position: fixed;
+  z-index: 2147483300;
+  bottom: 62px;
+  left: 16px;
+  padding: 8px 12px;
+  border: 1px solid var(--ve-text);
+  border-radius: 0;
+  background: var(--ve-lime);
+  color: var(--ve-text);
+  box-shadow: var(--ve-lift);
+  font: 500 10.5px/1.4 var(--ve-mono);
+  letter-spacing: 0.06em;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.18s ease, transform 0.18s ease;
+  pointer-events: none;
+}
+
+.ve-toast.is-on { opacity: 1; transform: none; }
+
+@media (max-width: 760px) {
+  .ve-panel {
+    top: auto;
+    right: 8px;
+    bottom: 8px;
+    left: 8px;
+    width: auto;
+    max-height: 56vh;
+  }
+
+  /* Only tighten the default corner offset. Deliberately no `left` or
+     `flex-wrap` here: stretching the bar full-width would fight its inline
+     right-anchored position and its fixed height, which is what keeps the
+     logo from moving when it collapses. */
+  .ve-bar {
+    top: 8px;
+    right: 8px;
+  }
+
+  .ve-scope { flex-direction: column; align-items: stretch; }
+}
