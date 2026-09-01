@@ -4,6 +4,8 @@
 
 No build step, no framework, no backend. Two files and a loader snippet turn any static site into something you can edit like a design tool — and the values are written back **in the unit they were authored in**, so a responsive `cqw` / `%` system stays intact instead of collapsing into pixels.
 
+**[◆ Project page — watch it in motion](https://46cc4b9e707744ee89426697f056aeac.app-tencent.workbuddy.link)** — every core feature as a looping clip, and the reasoning behind the design.
+
 **[▶ Try the live playground](https://2268f1f862c941eb8066ed3e11d905ca.app-tencent.workbuddy.link/?edit=1)** — the link opens with the editor already armed. Scroll: every screen demos one capability.
 
 ![The inspector editing a gradient](visual-editor-assets/screenshots/01-inspector-gradient.png)
