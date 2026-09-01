@@ -1,18 +1,33 @@
-/* Visual Editor — landing page
-   Same design language as the playground: Swiss grid, hairlines, hard accents,
-   square corners, no soft gradients, nothing purple. */
+/* Visual Editor — project page
+   Swiss grid, hairlines, hard accents, square corners. No soft gradients,
+   nothing purple.
+
+   VERTICAL RHYTHM — one scale, used everywhere. The previous build mixed
+   0/54, 99/81 and 81/81 padding pairs, so no two section gaps matched and the
+   page read as unplanned. Sections now pick from --sp-* only. */
 
 :root {
   --paper: #f5f4f1;
+  --paper-pure: #fff;
   --ink: #0b0b0b;
-  --ink-dim: #6b6b6b;
+  --ink-dim: #5f5f5f;
   --ink-faint: #9a9a9a;
   --line: #dddbd5;
+  --line-soft: #e9e7e2;
   --red: #ff3b14;
   --lime: #ddf14a;
   --blue: #1b4dff;
   --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   --sans: -apple-system, "Helvetica Neue", "Inter", Arial, sans-serif;
+
+  /* spacing scale */
+  --sp-1: 8px;
+  --sp-2: 16px;
+  --sp-3: 24px;
+  --sp-4: 36px;
+  --sp-5: 56px;
+  --sp-6: 88px;
+  --gut: 5vw;          /* page gutter */
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -28,9 +43,6 @@ body {
 
 ::selection { background: var(--lime); color: var(--ink); }
 
-.hairline-t { border-top: 1px solid var(--ink); }
-.hairline-b { border-bottom: 1px solid var(--ink); }
-
 .mono-tag {
   font: 500 10px/1.4 var(--mono);
   letter-spacing: 0.14em;
@@ -38,200 +50,227 @@ body {
 }
 
 .faint { color: var(--ink-faint); }
-
 .num { color: var(--red); }
 
 code {
-  font-family: var(--mono);
-  font-size: 0.92em;
-  background: #eceae6;
   padding: 0.1em 0.35em;
+  background: #eceae6;
+  font-family: var(--mono);
+  font-size: 0.9em;
 }
+
+/* Every major band shares one rule, so the page has a single rhythm. */
+.why, .compare, .save, .principles, .install {
+  padding: var(--sp-6) var(--gut);
+  border-top: 1px solid var(--ink);
+}
+
+/* Section heading block: eyebrow + title, always the same internal gap. */
+.sec-head { margin-bottom: var(--sp-5); }
+
+.sec-title {
+  margin-top: var(--sp-2);
+  font-size: clamp(30px, 3.9vw, 58px);
+  font-weight: 700;
+  line-height: 1.06;
+  letter-spacing: -0.025em;
+}
+
+.sec-title em { font-style: normal; color: var(--red); }
 
 /* ---------------- hero ---------------- */
 
+/* Content-driven, not viewport-driven. The old hero was min-height:100vh with
+   the title pushed down by `margin:auto`, which left 215px of dead space on
+   desktop and 279px on a phone — the headline sat below the fold's midpoint
+   for no reason. Now it starts high and a live clip carries the rest. */
 .hero {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  padding: 0 4vw 6vh;
+  padding: var(--sp-3) var(--gut) var(--sp-6);
 }
 
 .hero-top {
   display: flex;
   align-items: center;
-  gap: 18px;
-  padding: 20px 0 16px;
+  gap: var(--sp-2);
+  padding-bottom: var(--sp-3);
+  border-bottom: 1px solid var(--ink);
 }
 
 .hero-top .faint { margin-left: auto; }
 
-.hero-mark { width: 40px; height: 40px; }
+.hero-mark { width: 30px; height: 30px; }
 
 .hero-title {
-  margin: auto 0 0;
-  font-size: clamp(56px, 10.5vw, 168px);
+  margin-top: var(--sp-5);
+  font-size: clamp(44px, 7.4vw, 118px);
   font-weight: 700;
-  line-height: 0.98;
-  letter-spacing: -0.035em;
+  line-height: 0.95;
+  letter-spacing: -0.04em;
 }
 
-.hero-title em { font-style: normal; color: var(--red); }
-
 .hero-sub {
-  max-width: 560px;
-  margin-top: 32px;
-  font-size: 17px;
-  line-height: 1.65;
+  max-width: 30ch;
+  margin-top: var(--sp-3);
+  font-size: clamp(16px, 1.4vw, 20px);
+  line-height: 1.55;
   color: var(--ink-dim);
 }
 
+.hero-sub em { font-style: italic; color: var(--ink); }
+
 .hero-cta {
   display: flex;
-  gap: 12px;
-  margin-top: 36px;
+  flex-wrap: wrap;
+  gap: var(--sp-1);
+  margin-top: var(--sp-4);
 }
 
 .cta {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  padding: 14px 26px;
+  padding: 13px 24px;
   border: 1px solid var(--ink);
-  font: 600 13px/1 var(--mono);
+  color: var(--ink);
+  font: 600 12px/1 var(--mono);
   letter-spacing: 0.1em;
   text-transform: uppercase;
   text-decoration: none;
-  color: var(--ink);
-  transition: background 0.12s ease, color 0.12s ease;
+  transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
 }
 
 .cta-solid { background: var(--ink); color: var(--paper); }
 .cta-solid:hover { background: var(--red); border-color: var(--red); color: #fff; }
 .cta-ghost:hover { background: var(--lime); }
+.cta-arrow { font-size: 14px; line-height: 1; }
 
-.cta-arrow { font-size: 15px; line-height: 1; }
-
-.hero-note { margin-top: 18px; }
-
-/* ---------------- capability strip ---------------- */
-
-.strip {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 10px 14px;
-  padding: 14px 4vw;
-  font: 500 10px/1 var(--mono);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--ink-dim);
-}
-
-.strip i {
-  width: 5px;
-  height: 5px;
-  background: var(--red);
-  transform: rotate(45deg);
-}
-
-/* ---------------- features ---------------- */
-
-.feat {
-  display: grid;
-  grid-template-columns: 5fr 7fr;
-  gap: 4vw;
-  align-items: center;
-  padding: 9vh 4vw;
-  border-bottom: 1px solid var(--line);
-}
-
-.feat.flip .feat-copy { order: 2; }
-.feat.flip .feat-media { order: 1; }
-
-.feat-copy h2 {
-  margin: 14px 0 18px;
-  font-size: clamp(28px, 3.4vw, 46px);
-  font-weight: 700;
-  line-height: 1.04;
-  letter-spacing: -0.02em;
-}
-
-.feat-copy p {
-  max-width: 46ch;
-  font-size: 15px;
-  line-height: 1.7;
-  color: var(--ink-dim);
-}
-
-.feat-copy b { color: var(--ink); }
-
-.feat-media {
+.hero-media {
+  margin-top: var(--sp-5);
   border: 1px solid var(--ink);
-  box-shadow: 6px 6px 0 var(--ink);
-  background: #fff;
+  background: var(--paper-pure);
+  box-shadow: 8px 8px 0 var(--ink);
   overflow: hidden;
 }
 
-.feat-media video {
-  display: block;
-  width: 100%;
-  height: auto;
-}
+.hero-media video { display: block; width: 100%; height: auto; }
 
 /* ---------------- why ---------------- */
 
-.why { padding: 11vh 4vw 9vh; }
-
-.why-title {
-  margin: 14px 0 44px;
-  font-size: clamp(40px, 6vw, 92px);
-  font-weight: 700;
-  line-height: 1.02;
-  letter-spacing: -0.03em;
-}
-
-.why-title em { font-style: normal; color: var(--red); }
-
-/* The 0→80 / 80→100 bar: fast segment in blue, slow segment in red, widths
-   encode the proportions literally. */
-.why-bar { max-width: 980px; margin-bottom: 56px; }
+.why-bar { max-width: 900px; margin-bottom: var(--sp-5); }
 
 .why-bar-track {
   display: flex;
-  height: 64px;
+  height: 54px;
   border: 1px solid var(--ink);
-  background: #fff;
+  background: var(--paper-pure);
+}
+
+.why-bar-fast,
+.why-bar-slow {
+  display: flex;
+  align-items: center;
+  color: #fff;
+  font: 600 12px/1 var(--mono);
+  letter-spacing: 0.1em;
 }
 
 .why-bar-fast {
   width: 80%;
-  display: flex;
-  align-items: center;
-  padding-left: 18px;
+  padding-left: var(--sp-2);
   background: var(--blue);
-  color: #fff;
-  font: 600 13px/1 var(--mono);
-  letter-spacing: 0.1em;
   border-right: 1px solid var(--ink);
 }
 
 .why-bar-slow {
   flex: 1;
-  display: flex;
-  align-items: center;
   justify-content: center;
   background: var(--red);
-  color: #fff;
-  font: 600 13px/1 var(--mono);
-  letter-spacing: 0.1em;
 }
 
+/* Labels sat 10px under the bar — close enough to read as part of it. A label
+   row needs to be clearly *about* the bar, not glued to it. */
 .why-bar-labels {
   display: flex;
   justify-content: space-between;
-  margin-top: 10px;
+  margin-top: var(--sp-2);
   color: var(--ink-dim);
+}
+
+/* the two loops */
+.loops {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-5);
+}
+
+.loop {
+  display: flex;
+  flex-direction: column;
+  padding: var(--sp-3);
+  border: 1px solid var(--ink);
+  background: var(--paper-pure);
+}
+
+.loop-bad { box-shadow: 5px 5px 0 var(--line); }
+.loop-good { box-shadow: 5px 5px 0 var(--lime); }
+
+.loop-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  padding-bottom: var(--sp-2);
+  border-bottom: 1px solid var(--line);
+}
+
+.loop-cost { font: 700 13px/1 var(--mono); }
+.loop-bad .loop-cost { color: var(--red); }
+.loop-good .loop-cost { color: var(--blue); }
+
+.loop-steps {
+  margin: var(--sp-2) 0 var(--sp-2) 0;
+  padding-left: 0;
+  list-style: none;
+  counter-reset: step;
+}
+
+.loop-steps li {
+  counter-increment: step;
+  position: relative;
+  padding: 7px 0 7px 30px;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--ink-dim);
+}
+
+.loop-steps li::before {
+  content: counter(step);
+  position: absolute;
+  left: 0;
+  top: 8px;
+  width: 18px;
+  height: 18px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  font: 500 10px/1 var(--mono);
+  color: var(--ink);
+}
+
+.loop-good .loop-steps li::before { border-color: var(--ink); }
+
+/* The "→ back to step 1" cue: the bad loop visibly returns on itself. */
+.loop-bad .loop-steps li:last-child { color: var(--red); }
+.loop-bad .loop-steps li:last-child::before { border-color: var(--red); color: var(--red); }
+
+.loop-foot {
+  margin-top: auto;
+  padding-top: var(--sp-2);
+  border-top: 1px solid var(--line);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink-faint);
 }
 
 .why-grid {
@@ -242,79 +281,167 @@ code {
 }
 
 .why-cell {
-  padding: 26px 26px 30px;
+  padding: var(--sp-3);
   border-right: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
 }
 
-.why-n {
-  font: 600 12px/1 var(--mono);
-  letter-spacing: 0.08em;
-  color: var(--red);
-}
+.why-n { font: 600 11px/1 var(--mono); letter-spacing: 0.08em; color: var(--red); }
 
 .why-cell h3 {
-  margin: 14px 0 12px;
-  font-size: 19px;
+  margin: 12px 0 10px;
+  font-size: 17px;
   font-weight: 700;
+  line-height: 1.28;
   letter-spacing: -0.01em;
-  line-height: 1.25;
 }
 
-.why-cell p {
+.why-cell p { font-size: 14px; line-height: 1.65; color: var(--ink-dim); }
+
+/* ---------------- comparison table ---------------- */
+
+.cmp {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid var(--ink);
+  background: var(--paper-pure);
+  font-size: 14px;
+}
+
+.cmp th, .cmp td {
+  padding: 14px var(--sp-2);
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.cmp th:last-child, .cmp td:last-child { border-right: 0; }
+.cmp tbody tr:last-child th, .cmp tbody tr:last-child td { border-bottom: 0; }
+
+.cmp thead th {
+  border-bottom: 1px solid var(--ink);
+  background: var(--paper);
+  font: 600 12px/1.3 var(--mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* The recommended column is the only one carrying ink — the table states its
+   own conclusion without a "best!" badge. */
+.cmp thead th.is-mine { background: var(--ink); color: var(--paper); }
+.cmp td.is-mine { background: #fbfbf9; font-weight: 500; color: var(--ink); }
+
+.cmp tbody th {
+  width: 20%;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--ink);
+}
+
+.cmp tbody td { color: var(--ink-dim); }
+
+.dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 9px;
+  vertical-align: 1px;
+}
+
+.dot.good { background: var(--blue); }
+.dot.ok   { background: var(--lime); }
+.dot.bad  { background: var(--red); }
+
+.cmp-note {
+  max-width: 68ch;
+  margin-top: var(--sp-3);
   font-size: 14px;
   line-height: 1.7;
   color: var(--ink-dim);
 }
 
-.why-cell b { color: var(--ink); }
+/* ---------------- capability strip ---------------- */
 
-/* ---------------- save ---------------- */
-
-.save { padding: 11vh 4vw; }
-
-.save-title {
-  margin: 14px 0 18px;
-  font-size: clamp(34px, 4.6vw, 68px);
-  font-weight: 700;
-  line-height: 1.04;
-  letter-spacing: -0.025em;
-}
-
-.save-title em { font-style: normal; color: var(--blue); }
-
-.save-sub {
-  max-width: 60ch;
-  font-size: 15px;
-  line-height: 1.7;
-  color: var(--ink-dim);
-}
-
-.save-split {
-  display: grid;
-  grid-template-columns: 5fr 7fr;
-  gap: 4vw;
-  align-items: start;
-  margin-top: 12px;
-}
-
-.save-list {
+.strip {
   display: flex;
-  flex-direction: column;
-  margin-top: 28px;
-  border-top: 1px solid var(--line);
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px var(--sp-2);
+  padding: 14px var(--gut);
+  border-top: 1px solid var(--ink);
+  border-bottom: 1px solid var(--ink);
+  color: var(--ink-dim);
+  font: 500 10px/1 var(--mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 
-.save-item {
-  padding: 18px 0;
+.strip i { width: 5px; height: 5px; background: var(--red); transform: rotate(45deg); }
+
+/* ---------------- features ---------------- */
+
+.feat {
+  display: grid;
+  grid-template-columns: 4fr 7fr;
+  gap: var(--gut);
+  align-items: center;
+  padding: var(--sp-6) var(--gut);
   border-bottom: 1px solid var(--line);
 }
 
-.save-item h3 {
-  font-size: 16px;
+/* Alternating sides must not change the column WIDTHS — reordering alone left
+   the media in the 4fr track on every flipped row, so half the clips rendered
+   43% narrower than the other half. Mirror the track sizes too. */
+.feat.flip { grid-template-columns: 7fr 4fr; }
+.feat.flip .feat-copy { order: 2; }
+.feat.flip .feat-media { order: 1; }
+
+.feat-copy h2 {
+  margin: 12px 0 var(--sp-2);
+  font-size: clamp(24px, 2.7vw, 38px);
   font-weight: 700;
-  letter-spacing: -0.01em;
+  line-height: 1.08;
+  letter-spacing: -0.02em;
 }
+
+.feat-copy p {
+  max-width: 34ch;
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--ink-dim);
+}
+
+.feat-copy b { color: var(--ink); }
+
+.feat-media {
+  border: 1px solid var(--ink);
+  background: var(--paper-pure);
+  box-shadow: 6px 6px 0 var(--ink);
+  overflow: hidden;
+}
+
+.feat-media video { display: block; width: 100%; height: auto; }
+
+/* ---------------- save ---------------- */
+
+.save-split {
+  display: grid;
+  grid-template-columns: 4fr 7fr;
+  gap: var(--gut);
+  align-items: start;
+}
+
+.save-copy .sec-head { margin-bottom: var(--sp-3); }
+
+.save-sub { font-size: 15px; line-height: 1.65; color: var(--ink-dim); }
+
+.save-list { margin-top: var(--sp-3); border-top: 1px solid var(--line); }
+
+.save-item { padding: var(--sp-2) 0; border-bottom: 1px solid var(--line); }
+
+.save-item h3 { font-size: 15px; font-weight: 700; letter-spacing: -0.01em; }
 
 .save-item h3 kbd {
   margin-left: 8px;
@@ -325,86 +452,17 @@ code {
 }
 
 .save-item p {
-  margin-top: 8px;
+  margin-top: 7px;
   font-size: 14px;
-  line-height: 1.7;
+  line-height: 1.6;
   color: var(--ink-dim);
-}
-
-.save-item b { color: var(--ink); }
-
-.save-media { margin-top: 8px; }
-
-/* ---------------- units ---------------- */
-
-.units { padding: 11vh 4vw; }
-
-.units-title {
-  margin: 14px 0 40px;
-  font-size: clamp(40px, 6vw, 92px);
-  font-weight: 700;
-  line-height: 1;
-  letter-spacing: -0.03em;
-}
-
-.units-title em { font-style: normal; color: var(--blue); }
-
-.units-grid {
-  display: grid;
-  grid-template-columns: 7fr 5fr;
-  gap: 4vw;
-  align-items: start;
-}
-
-.units-grid > p {
-  max-width: 58ch;
-  font-size: 16px;
-  line-height: 1.75;
-  color: var(--ink-dim);
-}
-
-.units-grid > p b { color: var(--ink); }
-
-.units-card {
-  border: 1px solid var(--ink);
-  background: #fff;
-  box-shadow: 6px 6px 0 var(--ink);
-}
-
-.units-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 14px 18px;
-  border-bottom: 1px solid var(--line);
-}
-
-.units-row:last-child { border-bottom: 0; }
-
-.units-code {
-  background: none;
-  padding: 0;
-  font-size: 15px;
-  font-weight: 600;
-}
-
-.units-code.good { color: var(--ink); }
-.units-code.bad {
-  color: var(--ink-faint);
-  text-decoration: line-through;
-  text-decoration-color: var(--red);
 }
 
 /* ---------------- principles ---------------- */
 
-.principles { padding: 11vh 4vw; }
-
 .pr-list {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 0;
-  margin-top: 40px;
   border-top: 1px solid var(--line);
   border-left: 1px solid var(--line);
   list-style: none;
@@ -414,20 +472,20 @@ code {
 .pr-list li {
   counter-increment: pr;
   position: relative;
-  padding: 28px 26px 28px 64px;
+  padding: var(--sp-3) var(--sp-3) var(--sp-3) 62px;
   border-right: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
-  font-size: 15px;
-  line-height: 1.7;
+  font-size: 14px;
+  line-height: 1.65;
   color: var(--ink-dim);
 }
 
 .pr-list li::before {
   content: counter(pr, decimal-leading-zero);
   position: absolute;
-  left: 26px;
-  top: 30px;
-  font: 600 12px/1 var(--mono);
+  left: var(--sp-3);
+  top: 26px;
+  font: 600 11px/1 var(--mono);
   letter-spacing: 0.08em;
   color: var(--red);
 }
@@ -436,25 +494,11 @@ code {
 
 /* ---------------- install ---------------- */
 
-.install { padding: 11vh 4vw; }
-
-.install h2 {
-  margin: 14px 0 16px;
-  font-size: clamp(34px, 4.5vw, 64px);
-  font-weight: 700;
-  letter-spacing: -0.02em;
-}
-
-.install-sub {
-  max-width: 62ch;
-  font-size: 15px;
-  line-height: 1.7;
-  color: var(--ink-dim);
-}
+.install-sub { font-size: 15px; line-height: 1.65; color: var(--ink-dim); }
 
 .install-code {
-  margin-top: 32px;
-  padding: 24px 28px;
+  margin-top: var(--sp-3);
+  padding: var(--sp-3);
   border: 1px solid var(--ink);
   background: var(--ink);
   color: #e8e6e2;
@@ -463,33 +507,32 @@ code {
   font: 400 13px/1.7 var(--mono);
 }
 
-/* The global inline-code chip style paints a light background behind every
-   line box — inside a dark pre that turns each line into a white stripe and
-   swallows the text. Neutralise it here. */
-.install-code code {
-  background: none;
-  padding: 0;
-  font-size: inherit;
-}
+/* The global inline-code chip would paint a light stripe behind each line of
+   this dark block and swallow the text. */
+.install-code code { background: none; padding: 0; font-size: inherit; }
+
+.install-cta { display: flex; flex-wrap: wrap; gap: var(--sp-1); margin-top: var(--sp-4); }
 
 /* ---------------- footer ---------------- */
 
 .foot {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 22px;
-  padding: 28px 4vw;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--gut);
+  border-top: 1px solid var(--ink);
 }
 
-.foot-mark { width: 26px; height: 26px; }
+.foot-mark { width: 24px; height: 24px; }
 
-.foot-links { display: flex; gap: 22px; }
+.foot-links { display: flex; gap: var(--sp-3); }
 
 .foot-links a {
+  color: var(--ink);
   font: 600 11px/1 var(--mono);
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--ink);
   text-decoration: none;
 }
 
@@ -499,16 +542,49 @@ code {
 
 /* ---------------- responsive ---------------- */
 
-@media (max-width: 900px) {
-  .feat, .feat.flip {
+@media (max-width: 940px) {
+  :root { --sp-6: 60px; --sp-5: 40px; --gut: 6vw; }
+
+  .feat, .feat.flip, .save-split {
     grid-template-columns: 1fr;
-    gap: 28px;
+    gap: var(--sp-3);
   }
-  .feat.flip .feat-copy { order: 0; }
+  .feat.flip .feat-copy,
   .feat.flip .feat-media { order: 0; }
-  .units-grid, .why-grid { grid-template-columns: 1fr; }
-  .save-split { grid-template-columns: 1fr; }
-  .why-bar-track { height: 52px; }
-  .pr-list { grid-template-columns: 1fr; }
+
+  .why-grid, .loops, .pr-list { grid-template-columns: 1fr; }
   .hero-top .faint { display: none; }
+  .hero-sub { max-width: none; }
+  .feat-copy p { max-width: none; }
+
+  /* A six-row comparison cannot stay a table on a phone: it becomes stacked
+     cards, one per criterion, with the column name as an inline label. */
+  .cmp, .cmp thead, .cmp tbody, .cmp tr, .cmp th, .cmp td { display: block; }
+  .cmp { border: 0; background: none; }
+  .cmp thead { display: none; }
+  .cmp tbody tr {
+    margin-bottom: var(--sp-2);
+    border: 1px solid var(--ink);
+    background: var(--paper-pure);
+  }
+  .cmp tbody th {
+    width: auto;
+    border-bottom: 1px solid var(--ink);
+    background: var(--paper);
+    font: 600 11px/1.3 var(--mono);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .cmp tbody td { border-right: 0; }
+  .cmp tbody td::before {
+    content: attr(data-col) " — ";
+    color: var(--ink-faint);
+    font: 500 10px/1 var(--mono);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
 }
