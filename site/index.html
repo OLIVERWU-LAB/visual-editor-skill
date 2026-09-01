@@ -7,8 +7,117 @@
 <meta name="description" content="A Figma-like inspector that runs inside any static HTML page. Drag, resize, retype and restyle live — then save real CSS in the units the author wrote. A skill for AI coding agents.">
 <link rel="icon" href="assets/mark.svg" type="image/svg+xml">
 <link rel="stylesheet" href="css/main.css">
+<link rel="stylesheet" href="css/cover.css">
 </head>
 <body>
+
+<!-- ======================= covers =======================
+     Two screenshot-ready plates before the page proper. Each .plate is locked
+     to an exact pixel size (not a viewport ratio) so a screenshot of the frame
+     is already the right aspect: crop to the hairline and you are done.
+     The artwork is the real editor — stills lifted from the playground at 2x,
+     never a video frame, so the type stays crisp when scaled up. -->
+<section class="covers">
+
+  <!-- ---------- 2:1 — 2400x1200 ---------- -->
+  <div class="plate-wrap">
+    <div class="plate-meta mono-tag">Cover 01 · 2:1 · 2400 × 1200</div>
+    <div class="plate plate-21" id="cover-21">
+      <div class="c21">
+        <div class="c21-left">
+          <div class="c21-brand">
+            <img class="c21-mark" src="assets/mark.svg" alt="">
+            <div class="c21-brand-txt">
+              <b>Visual Editor</b>
+              <span>A skill for AI coding agents</span>
+            </div>
+          </div>
+
+          <h1 class="c21-title">Drag it.<br><em>Don't</em><br>describe it.</h1>
+
+          <p class="c21-sub">
+            A Figma-like inspector that runs <em>inside</em> your page.
+            Adjust by hand — save real CSS.
+          </p>
+
+          <div class="c21-rule"></div>
+
+          <ul class="c21-facts">
+            <li><b>~1s</b><span>per adjustment</span></li>
+            <li><b>0</b><span>tokens spent</span></li>
+            <li><b>cqw</b><span>units preserved</span></li>
+          </ul>
+        </div>
+
+        <div class="c21-right">
+          <figure class="shot shot-sel">
+            <img src="assets/cover/selection-macro.png" alt="A selected heading with resize handles and a live size badge">
+          </figure>
+          <figure class="shot shot-panel">
+            <img src="assets/cover/panel.png" alt="The inspector panel showing typography, fill and opacity controls">
+          </figure>
+          <div class="c21-callout mono-tag">
+            <span class="dot"></span>Real CSS · not a mockup
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ---------- 16:9 — 2560x1440 ---------- -->
+  <div class="plate-wrap">
+    <div class="plate-meta mono-tag">Cover 02 · 16:9 · 2560 × 1440</div>
+    <div class="plate plate-169" id="cover-169">
+      <div class="c169">
+        <header class="c169-bar">
+          <div class="c169-brand">
+            <img class="c169-mark" src="assets/mark.svg" alt="">
+            <b>Visual Editor</b>
+          </div>
+          <span class="mono-tag c169-tag">On-page inspector for static HTML</span>
+        </header>
+
+        <div class="c169-body">
+          <h1 class="c169-title">The last 20%<br>is a <em>judgement</em> problem.</h1>
+          <p class="c169-sub">
+            AI writes the page in one prompt. The visual polish still needs a
+            hand, an eye, and a loop that closes in a second.
+          </p>
+        </div>
+
+        <figure class="c169-stage">
+          <img src="assets/cover/console-selected.png" alt="The editor open on a music console interface, element selected, inspector docked right">
+        </figure>
+
+        <footer class="c169-foot">
+          <div class="c169-loop">
+            <span>Drag</span><i>→</i><span>Look</span><i>→</i><span>Judge</span>
+          </div>
+          <div class="c169-spacer"></div>
+          <span class="mono-tag faint">github.com/OLIVERWU-LAB/visual-editor-skill</span>
+        </footer>
+      </div>
+    </div>
+  </div>
+
+  <div class="covers-hint mono-tag">
+    Screenshot either plate at its hairline border — the frame is already the
+    exact ratio. Scroll on for the full write-up.
+  </div>
+</section>
+
+<script>
+/* Export mode: ?plate=21 or ?plate=169 isolates one art board at its true
+   pixel size, so a capture is the finished asset with nothing to crop. */
+(function () {
+  var want = new URLSearchParams(location.search).get("plate");
+  if (!want) return;
+  var el = document.getElementById("cover-" + want);
+  if (!el) return;
+  document.body.classList.add("plate-only");
+  el.closest(".plate-wrap").classList.add("is-target");
+})();
+</script>
 
 <!-- ======================= hero ======================= -->
 <header class="hero">
