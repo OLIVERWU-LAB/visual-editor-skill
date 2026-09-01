@@ -1,20 +1,18 @@
-/* Visual Editor — cover plates
+/* Visual Editor — cover plate
    ------------------------------------------------------------------
-   Two screenshot-ready plates. Design language matches the rest of the site:
-   Swiss grid, hairlines, hard accents (red / lime / blue), square corners.
-   No soft gradients. Nothing purple.
+   A wall of sticky notes: real editor stills caught mid-edit, pinned at
+   angles with hard offset shadows, overlapping until the board is full.
+
+   Design language matches the rest of the site: Swiss grid, hairlines, hard
+   accents, square corners. No soft gradients, nothing purple — and the same
+   goes for the shadows: solid offset blocks, never blurred.
 
    WHY FIXED PIXELS, NOT `aspect-ratio` + viewport units:
-   A cover has to leave here as an asset with real dimensions. If the plate were
-   sized in vw, its pixel size would depend on the window and every screenshot
-   would come out a different size. So each plate is locked to exact pixels and
-   then scaled DOWN to fit the window with a transform — the layout inside is
-   computed at full size, so a 2x screenshot (or the export script) yields a
-   pixel-perfect 4800x2400 / 5120x2880 image with type rendered at final size.
-
-   Everything inside the plates is sized in px on purpose: these are fixed-size
-   art boards, not responsive layouts, and px is what keeps the composition
-   identical at any zoom. */
+   A cover has to leave here as an asset with real dimensions. If the plate
+   were sized in vw its pixel size would depend on the window and every
+   screenshot would come out a different size. So the plate is locked to exact
+   pixels and scaled DOWN to fit the window with a transform — the layout
+   inside is computed at full size, so a 2x export is pixel-perfect. */
 
 .covers {
   padding: 40px 0 64px;
@@ -27,13 +25,13 @@
 
 .plate-wrap {
   /* The plate is scaled with transform, which does NOT shrink the space it
-     reserves in flow. Each wrapper therefore gets an explicit height from the
-     scale factor (set per-ratio below) so the plates never overlap. */
+     reserves in flow. The wrapper height is therefore derived from the scale
+     variable so the two never drift apart. */
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 10px;
-  margin-bottom: 44px;
+  margin-bottom: 24px;
 }
 
 .plate-meta {
@@ -52,20 +50,10 @@
   flex: none;
 }
 
-/* --- exact art board sizes, scaled to fit the window ---
-   The scale lives in a variable so the wrapper height is derived from it
-   instead of being hand-computed per breakpoint — the earlier hard-coded
-   heights were what let the mobile plate overflow by 130px unnoticed. */
-:root {
-  --k21: 0.4583;    /* 2400 -> 1100 */
-  --k169: 0.4297;   /* 2560 -> 1100 */
-}
+:root { --k21: 0.4583; }   /* 2400 -> 1100 preview width */
 
-.plate-21  { width: 2400px; height: 1200px; transform: scale(var(--k21)); }
-.plate-169 { width: 2560px; height: 1440px; transform: scale(var(--k169)); }
-
-.plate-wrap:has(.plate-21)  { height: calc(1200px * var(--k21) + 44px); }
-.plate-wrap:has(.plate-169) { height: calc(1440px * var(--k169) + 44px); }
+.plate-21 { width: 2400px; height: 1200px; transform: scale(var(--k21)); }
+.plate-wrap:has(.plate-21) { height: calc(1200px * var(--k21) + 44px); }
 
 .covers-hint {
   max-width: 620px;
@@ -78,333 +66,88 @@
 }
 
 /* ==================================================================
-   COVER 01 — 2:1
-   Split plate: a typographic left column against a shelf of real editor
-   chrome on the right. The right side is deliberately dark so the two
-   product stills read as objects sitting on a surface, not as page bleed.
+   THE WALL — 2400x1200 art board
+   Every .note is absolutely positioned in board pixels. Rotation is kept
+   inside ±3° (beyond that it stops looking pinned and starts looking
+   dropped). A few notes deliberately bleed off the edges — a wall reads as
+   "full" when the pile clearly continues past the frame.
    ================================================================== */
 
-.c21 {
-  display: grid;
-  grid-template-columns: 1140px 1fr;
-  height: 100%;
-}
-
-.c21-left {
-  padding: 96px 88px 88px;
-  display: flex;
-  flex-direction: column;
-  border-right: 2px solid var(--ink);
-}
-
-.c21-brand { display: flex; align-items: center; gap: 22px; }
-.c21-mark { width: 76px; height: 76px; display: block; }
-
-.c21-brand-txt { display: flex; flex-direction: column; gap: 4px; }
-.c21-brand-txt b {
-  font-size: 30px;
-  font-weight: 700;
-  letter-spacing: -0.015em;
-}
-.c21-brand-txt span {
-  font: 500 15px/1.3 var(--mono);
-  letter-spacing: 0.13em;
-  text-transform: uppercase;
-  color: var(--ink-faint);
-}
-
-.c21-title {
-  margin-top: 74px;
-  font-size: 158px;
-  line-height: 0.9;
-  font-weight: 800;
-  letter-spacing: -0.045em;
-}
-.c21-title em {
-  font-style: normal;
-  color: var(--red);
-}
-
-.c21-sub {
-  margin-top: 40px;
-  max-width: 800px;
-  font-size: 30px;
-  line-height: 1.5;
-  color: var(--ink-dim);
-}
-.c21-sub em {
-  font-style: normal;
-  color: var(--ink);
-  border-bottom: 3px solid var(--lime);
-}
-
-.c21-rule {
-  margin-top: auto;
-  height: 2px;
-  background: var(--ink);
-}
-
-.c21-facts {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  list-style: none;
-  margin-top: 30px;
-}
-.c21-facts li { display: flex; flex-direction: column; gap: 6px; }
-.c21-facts b {
-  font: 700 46px/1 var(--mono);
-  letter-spacing: -0.02em;
-}
-.c21-facts li:nth-child(1) b { color: var(--blue); }
-.c21-facts li:nth-child(2) b { color: var(--red); }
-.c21-facts span {
-  font: 500 15px/1.3 var(--mono);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--ink-faint);
-}
-
-/* ---- right shelf ---- */
-.c21-right {
+.wall {
   position: relative;
-  background: var(--ink);
+  width: 2400px;
+  height: 1200px;
   overflow: hidden;
-}
-
-/* faint grid on the dark shelf, so it reads as a work surface */
-.c21-right::before {
-  content: "";
-  position: absolute;
-  inset: 0;
   background:
-    repeating-linear-gradient(90deg, rgba(255,255,255,0.06) 0 1px, transparent 1px 60px),
-    repeating-linear-gradient(0deg, rgba(255,255,255,0.06) 0 1px, transparent 1px 60px);
+    repeating-linear-gradient(90deg, #e2e0da 0 2px, transparent 2px 96px),
+    repeating-linear-gradient(0deg, #e2e0da 0 2px, transparent 2px 96px),
+    var(--paper);
 }
 
-.shot {
+.note {
   position: absolute;
+  margin: 0;
   background: #fff;
-  border: 2px solid var(--ink);
-  box-shadow: 18px 18px 0 rgba(0,0,0,0.55);
+  border: 3px solid var(--ink);
+  /* hard offset shadow, not a blur — same family as the site's 6px blocks,
+     scaled up for poster size */
+  box-shadow: 20px 20px 0 rgba(11, 11, 11, 0.22);
   overflow: hidden;
 }
-.shot img { display: block; width: 100%; height: auto; }
+.note img { display: block; width: 100%; height: auto; }
 
-/* the selected-heading still, angled slightly so the plate has a diagonal */
-.shot-sel {
-  top: 132px;
-  left: -70px;
-  width: 900px;
-  transform: rotate(-2.4deg);
-}
+/* ---- back layer: the big scenes ---- */
+.n-typing   { left: 280px;  top: 300px; width: 860px;  transform: rotate(1.2deg); }
+.n-gradient { left: 1180px; top: 340px; width: 1060px; transform: rotate(-1.4deg); }
+.n-scope    { left: 30px;   top: 880px; width: 1030px; transform: rotate(-1deg); }
+.n-replace  { left: 1560px; top: 44px;  width: 560px;  transform: rotate(1.6deg); }
 
-/* The inspector runs off the bottom of the plate. Ending it inside the frame
-   made it look like a small floating card; cropped, it reads as a tall rail
-   that continues past the edge — same reason the 16:9 stage bleeds. */
-.shot-panel {
-  top: 430px;
-  left: 470px;
-  width: 470px;
-  height: 820px;
-  transform: rotate(1.6deg);
-}
-.shot-panel img { width: 100%; }
+/* ---- mid layer ---- */
+.n-heading  { left: 110px;  top: 66px;  width: 800px;  transform: rotate(-1.8deg); }
+.n-resize   { left: -30px;  top: 470px; width: 660px;  transform: rotate(2.2deg); }
+.n-panel    { left: 2090px; top: 150px; width: 360px;  transform: rotate(1.2deg); }
+.n-save     { left: 1500px; top: 470px; width: 600px;  transform: rotate(-2deg); }
 
-.c21-callout {
-  position: absolute;
-  left: 64px;
-  bottom: 76px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 13px 20px;
-  background: var(--lime);
-  color: var(--ink);
-  border: 2px solid var(--ink);
-  font-size: 16px;
-  letter-spacing: 0.12em;
-  z-index: 3;
-}
-.c21-callout .dot {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: var(--red);
-}
+/* ---- front layer ---- */
+.n-card     { left: 1050px; top: 590px; width: 280px;  transform: rotate(3deg); }
+.n-dirty    { left: 1330px; top: 1020px; width: 680px; transform: rotate(-1.2deg); }
+.n-drawer   { left: -18px;  top: 34px;  width: 170px;  transform: rotate(-5deg); }
 
-/* ==================================================================
-   COVER 02 — 16:9
-   Statement type on top, the full editor screenshot as the hero object
-   below, bleeding off the bottom edge. Reads as "this is a real tool
-   with a real interface" at thumbnail size.
-   ================================================================== */
+.n-mark {
+  left: 950px; top: 80px;
+  width: 150px; height: 150px;
+  display: flex; align-items: center; justify-content: center;
+  transform: rotate(4deg);
+}
+.n-mark img { width: 96px; height: 96px; }
 
-.c169 {
-  height: 100%;
-  padding: 62px 88px 0;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  overflow: hidden;
-}
-
-/* a single lime bar pinned to the top edge — a hard accent that survives
-   being scaled down to a thumbnail */
-.c169::before {
-  content: "";
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 14px;
-  background: var(--lime);
-}
-
-.c169-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-bottom: 30px;
-  border-bottom: 2px solid var(--ink);
-}
-.c169-brand { display: flex; align-items: center; gap: 18px; }
-.c169-mark { width: 58px; height: 58px; display: block; }
-.c169-brand b {
-  font-size: 27px;
-  font-weight: 700;
-  letter-spacing: -0.015em;
-}
-.c169-tag {
-  font-size: 16px;
-  letter-spacing: 0.14em;
-  color: var(--ink-dim);
-}
-
-.c169-body {
-  display: grid;
-  grid-template-columns: 1360px 1fr;
-  gap: 80px;
-  align-items: end;
-  padding: 46px 0 38px;
-}
-.c169-title {
-  font-size: 104px;
-  line-height: 0.94;
-  font-weight: 800;
-  letter-spacing: -0.04em;
-}
-.c169-title em {
-  font-style: normal;
-  color: var(--red);
-}
-.c169-sub {
-  font-size: 25px;
-  line-height: 1.55;
-  color: var(--ink-dim);
-  padding-bottom: 8px;
-}
-
-/* The screenshot bleeds past the bottom edge: a cover should feel like a
-   window onto something larger, not a boxed-in thumbnail. */
-.c169-stage {
-  flex: 1;
-  position: relative;
-  border: 2px solid var(--ink);
-  border-bottom: 0;
-  background: #fff;
-  box-shadow: 0 -6px 0 var(--blue);
-  overflow: hidden;
-}
-.c169-stage img {
-  display: block;
-  width: 100%;
-  height: auto;
-  /* Nudge the frame up so the crop line falls through the middle of the
-     release artwork rather than skimming its top edge — clipping a row of
-     cards exactly at their corners looked like a broken render. */
-  margin-top: -34px;
-}
-
-/* The footer used to be absolutely positioned over the stage, so the chip and
-   the URL sat on top of live UI and the connecting rule sliced across the
-   artwork. It now owns its own band: the stage stops above it, nothing
-   overlaps, and the bleed is preserved because the stage is still clipped. */
-.c169-foot {
-  flex: none;
-  display: flex;
-  align-items: center;
-  gap: 26px;
-  padding: 30px 0 34px;
-  background: var(--paper);
-}
-.c169-loop {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 15px 26px;
-  background: var(--ink);
-  color: var(--paper);
-  border: 2px solid var(--ink);
-  font: 600 19px/1 var(--mono);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-.c169-loop i { font-style: normal; color: var(--lime); }
-.c169-spacer { flex: 1; height: 2px; background: var(--ink); }
-.c169-foot .mono-tag {
-  font-size: 15px;
-  background: var(--paper);
-  padding: 8px 14px;
-  border: 1px solid var(--line);
-  text-transform: none;
-  letter-spacing: 0.08em;
-}
+/* plain colour chips — the palette as notes in its own right */
+.chip { display: block; }
+.chip-lime { left: 720px;  top: 1070px; width: 110px; height: 110px; background: var(--lime); transform: rotate(-5deg); }
+.chip-red  { left: 2280px; top: 1010px; width: 120px; height: 120px; background: var(--red);  transform: rotate(-4deg); }
+.chip-blue { left: 1290px; top: -34px;  width: 100px; height: 100px; background: var(--blue); transform: rotate(3deg); }
 
 /* ------------------------------------------------------------------
-   Export mode. The script sets ?plate=21|169 to isolate one plate at
-   its true pixel size, so a captureScreenshot yields the asset with no
-   scaling, no chrome, no scroll offset to correct for. */
-body.plate-only {
-  background: #fff;
-  overflow: hidden;
-}
+   Export mode. ?plate=21 isolates the board at its true pixel size, so a
+   captureScreenshot is the finished asset with no scaling and no chrome. */
+body.plate-only { background: #fff; overflow: hidden; }
 body.plate-only > *:not(.covers) { display: none !important; }
-body.plate-only .covers {
-  padding: 0;
-  background: none;
-  border: 0;
-}
+body.plate-only .covers { padding: 0; background: none; border: 0; }
 body.plate-only .plate-meta,
 body.plate-only .covers-hint { display: none; }
-body.plate-only .plate-wrap {
-  margin: 0;
-  height: auto;
-  display: none;
-}
+body.plate-only .plate-wrap { margin: 0; height: auto; display: none; }
 body.plate-only .plate-wrap.is-target { display: block; }
-body.plate-only .plate {
-  transform: none;
-  outline: 0;
-}
+body.plate-only .plate { transform: none; outline: 0; }
 
 /* ------------------------------------------------------------------
-   Small screens: the plates keep their exact art-board size (that is the
-   whole point) and simply scale down further so both stay fully visible.
-   Each step targets a rendered width that fits the viewport with gutters. */
-@media (max-width: 1180px) {
-  :root { --k21: 0.3542; --k169: 0.3320; }   /* -> 850 wide */
-}
-
-@media (max-width: 900px) {
-  :root { --k21: 0.2708; --k169: 0.2539; }   /* -> 650 wide */
-  .covers { padding: 28px 0 44px; }
-}
-
-@media (max-width: 700px) {
-  :root { --k21: 0.2000; --k169: 0.1875; }   /* -> 480 wide */
-}
-
-@media (max-width: 520px) {
-  /* 390px phone: 340 wide leaves a 25px gutter each side */
-  :root { --k21: 0.1417; --k169: 0.1328; }
+   Small screens: the plate keeps its exact art-board size (that is the
+   whole point) and simply scales down further so it stays fully visible. */
+@media (max-width: 1180px) { :root { --k21: 0.3542; } }   /* -> 850 wide */
+@media (max-width: 900px)  { :root { --k21: 0.2708; }     /* -> 650 wide */
+  .covers { padding: 28px 0 44px; } }
+@media (max-width: 700px)  { :root { --k21: 0.2000; } }   /* -> 480 wide */
+@media (max-width: 520px)  {
+  :root { --k21: 0.1417; }                                 /* -> 340 wide */
   .plate-meta { font-size: 9px; padding: 4px 9px; }
   .covers-hint { max-width: 320px; padding: 0 20px; }
 }

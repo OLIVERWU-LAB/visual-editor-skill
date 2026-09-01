@@ -11,98 +11,48 @@
 </head>
 <body>
 
-<!-- ======================= covers =======================
-     Two screenshot-ready plates before the page proper. Each .plate is locked
-     to an exact pixel size (not a viewport ratio) so a screenshot of the frame
-     is already the right aspect: crop to the hairline and you are done.
-     The artwork is the real editor — stills lifted from the playground at 2x,
-     never a video frame, so the type stays crisp when scaled up. -->
+<!-- ======================= cover =======================
+     One screenshot-ready plate before the page proper. The .plate is locked to
+     an exact pixel size (not a viewport ratio) so a screenshot of the frame is
+     already the right aspect: crop to the hairline and you are done.
+
+     The artwork is a wall of sticky notes, and every note is the real editor
+     caught mid-edit — stills lifted from the playground at 2x, never a video
+     frame and never AI-generated, so the type stays crisp when scaled up. -->
 <section class="covers">
 
   <!-- ---------- 2:1 — 2400x1200 ---------- -->
   <div class="plate-wrap">
-    <div class="plate-meta mono-tag">Cover 01 · 2:1 · 2400 × 1200</div>
+    <div class="plate-meta mono-tag">Cover · 2:1 · 2400 × 1200</div>
     <div class="plate plate-21" id="cover-21">
-      <div class="c21">
-        <div class="c21-left">
-          <div class="c21-brand">
-            <img class="c21-mark" src="assets/mark.svg" alt="">
-            <div class="c21-brand-txt">
-              <b>Visual Editor</b>
-              <span>A skill for AI coding agents</span>
-            </div>
-          </div>
+      <div class="wall">
+        <!-- back layer: the big scenes -->
+        <figure class="note n-typing"><img src="assets/notes/typing.png" alt="Text being edited live, caret mid-word"></figure>
+        <figure class="note n-gradient"><img src="assets/notes/gradient.png" alt="A gradient block selected, gradient stops open in the inspector"></figure>
+        <figure class="note n-scope"><img src="assets/notes/scope-all7.png" alt="All seven shared instances outlined by the scope preview"></figure>
+        <figure class="note n-replace"><img src="assets/notes/replace-btn.png" alt="The replace-image button under the pointer"></figure>
 
-          <h1 class="c21-title">Drag it.<br><em>Don't</em><br>describe it.</h1>
+        <!-- mid layer -->
+        <figure class="note n-heading"><img src="assets/notes/sel-heading.png" alt="A selected heading with resize handles and a live size badge"></figure>
+        <figure class="note n-resize"><img src="assets/notes/resizing.png" alt="Mid-resize: eight handles and the size badge"></figure>
+        <figure class="note n-panel"><img src="assets/notes/panel-top.png" alt="The inspector rail"></figure>
+        <figure class="note n-save"><img src="assets/notes/save-menu.png" alt="The toolbar with the Save As menu open"></figure>
 
-          <p class="c21-sub">
-            A Figma-like inspector that runs <em>inside</em> your page.
-            Adjust by hand — save real CSS.
-          </p>
-
-          <div class="c21-rule"></div>
-
-          <ul class="c21-facts">
-            <li><b>~1s</b><span>per adjustment</span></li>
-            <li><b>0</b><span>tokens spent</span></li>
-            <li><b>cqw</b><span>units preserved</span></li>
-          </ul>
-        </div>
-
-        <div class="c21-right">
-          <figure class="shot shot-sel">
-            <img src="assets/cover/selection-macro.png" alt="A selected heading with resize handles and a live size badge">
-          </figure>
-          <figure class="shot shot-panel">
-            <img src="assets/cover/panel.png" alt="The inspector panel showing typography, fill and opacity controls">
-          </figure>
-          <div class="c21-callout mono-tag">
-            <span class="dot"></span>Real CSS · not a mockup
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ---------- 16:9 — 2560x1440 ---------- -->
-  <div class="plate-wrap">
-    <div class="plate-meta mono-tag">Cover 02 · 16:9 · 2560 × 1440</div>
-    <div class="plate plate-169" id="cover-169">
-      <div class="c169">
-        <header class="c169-bar">
-          <div class="c169-brand">
-            <img class="c169-mark" src="assets/mark.svg" alt="">
-            <b>Visual Editor</b>
-          </div>
-          <span class="mono-tag c169-tag">On-page inspector for static HTML</span>
-        </header>
-
-        <div class="c169-body">
-          <h1 class="c169-title">The last 20%<br>is a <em>judgement</em> problem.</h1>
-          <p class="c169-sub">
-            AI writes the page in one prompt. The visual polish still needs a
-            hand, an eye, and a loop that closes in a second.
-          </p>
-        </div>
-
-        <figure class="c169-stage">
-          <img src="assets/cover/console-selected.png" alt="The editor open on a music console interface, element selected, inspector docked right">
-        </figure>
-
-        <footer class="c169-foot">
-          <div class="c169-loop">
-            <span>Drag</span><i>→</i><span>Look</span><i>→</i><span>Judge</span>
-          </div>
-          <div class="c169-spacer"></div>
-          <span class="mono-tag faint">github.com/OLIVERWU-LAB/visual-editor-skill</span>
-        </footer>
+        <!-- front layer: small notes and colour chips -->
+        <figure class="note n-card"><img src="assets/notes/sel-card.png" alt="A selected release card"></figure>
+        <figure class="note n-dirty"><img src="assets/notes/dirty-bar.png" alt="The toolbar carrying an unsaved-changes badge"></figure>
+        <figure class="note n-drawer"><img src="assets/notes/drawer-red.png" alt="The collapsed toolbar: the red logo alone"></figure>
+        <figure class="note n-mark"><img src="assets/mark.svg" alt="The Visual Editor mark"></figure>
+        <i class="note chip chip-lime"></i>
+        <i class="note chip chip-red"></i>
+        <i class="note chip chip-blue"></i>
       </div>
     </div>
   </div>
 
   <div class="covers-hint mono-tag">
-    Screenshot either plate at its hairline border — the frame is already the
-    exact ratio. Scroll on for the full write-up.
+    Screenshot the plate at its hairline border — the frame is already the
+    exact 2:1 ratio. Scroll on for the full write-up.
   </div>
 </section>
 
